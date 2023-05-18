@@ -1,0 +1,74 @@
+package views
+
+import (
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/widget"
+	"github.com/authentication_app/internal/domain/request"
+	"github.com/authentication_app/internal/net"
+	"github.com/authentication_app/internal/ui/constants"
+	"strconv"
+)
+
+var userData = [][]string{[]string{"注册人数", "在线人数", "离线人数"}, []string{"0", "0", "0"}}
+var codeData = [][]string{[]string{"编码"}, []string{""}}
+
+func NewUserView() {
+	w := a.NewWindow(constants.KMainText)
+	windows[request.MessageUserInfo] = w
+	w.Resize(fyne.Size{
+		Width:  constants.KMainWindowWidth,
+		Height: constants.KMainWindowHeight,
+	})
+	_ = net.UserInfo()
+	userTable := widget.NewTable(func() (int, int) {
+		return len(userData), len(userData[0])
+	},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("wide content")
+		},
+		func(i widget.TableCellID, o fyne.CanvasObject) {
+			o.(*widget.Label).SetText(userData[i.Row][i.Col])
+		})
+	tables[constants.KUserInfoTable] = userTable
+	user := container.NewTabItem("用户信息", userTable)
+	codeTable := widget.NewTable(func() (int, int) {
+		return len(codeData), 1
+	},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("wide content")
+		},
+		func(i widget.TableCellID, o fyne.CanvasObject) {
+			o.(*widget.Label).SetText(codeData[i.Row][i.Col])
+		})
+	codeCountEntry := widget.NewEntry()
+	codeCountEntry.SetPlaceHolder(constants.KCodeCount)
+	form := widget.NewForm(
+		widget.NewFormItem(constants.KCodeCount, codeCountEntry),
+	)
+	form.OnSubmit = func() {
+		err := codeCountEntry.Validate()
+		if err != nil {
+			dialog.ShowError(err, w)
+			return
+		}
+		count, _ := strconv.ParseInt(codeCountEntry.Text, 10, 64)
+		err = net.GenerateCode((int)(count))
+		if err != nil {
+			dialog.ShowError(err, w)
+		}
+	}
+	form.SubmitText = "点击生成"
+	box := container.NewHSplit(
+		form,
+		codeTable,
+	)
+	code := container.NewTabItem("生成编码", box)
+	tables[constants.KCodeTable] = codeTable
+
+	appTabs := container.NewAppTabs(user, code)
+	w.SetContent(appTabs)
+	w.CenterOnScreen()
+	w.Show()
+}
