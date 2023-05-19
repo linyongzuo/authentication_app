@@ -10,4 +10,5 @@ const (
 
 	KMainText  = "主页"
 	KCodeCount = "编码个数"
+	KCode      = "编码"
 )

@@ -11,6 +11,7 @@ import (
 	"github.com/authentication_app/internal/domain/response"
 	"github.com/authentication_app/internal/net"
 	"github.com/authentication_app/internal/ui/constants"
+	"github.com/sirupsen/logrus"
 	"strconv"
 )
 
@@ -40,12 +41,14 @@ func processMessage(messageType request.MessageType, message []byte) {
 	switch messageType {
 	case request.MessageAdminLogin:
 		{
-			net.Client.Heartbeat()
+			logrus.Info("用户登陆成功，展示主页面")
+			go net.Client.Heartbeat()
 			windows[messageType].Hide()
 			NewUserView()
 		}
 	case request.MessageUserInfo:
 		{
+			logrus.Info("获取用户信息成功")
 			resp := response.UserInfoResponse{}
 			_ = json.Unmarshal(message, &resp)
 			userData[1][0] = strconv.FormatInt(int64(resp.RegisterCount), 10)
@@ -55,7 +58,8 @@ func processMessage(messageType request.MessageType, message []byte) {
 		}
 	case request.MessageAdminGenerateCode:
 		{
-			codeData = [][]string{[]string{"编码"}}
+			logrus.Info("服务器生成编码成功")
+			codeData = [][]string{[]string{constants.KCode}}
 			resp := response.GenerateCodeResponse{}
 			_ = json.Unmarshal(message, &resp)
 			for _, v := range resp.Codes {
