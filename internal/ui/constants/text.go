@@ -8,7 +8,12 @@ const (
 	KUserNameText     = "用户名"
 	KUserPasswordText = "密码"
 
-	KMainText  = "主页"
-	KCodeCount = "编码个数"
-	KCode      = "编码"
+	KMainText     = "主页"
+	KCodeCount    = "编码个数"
+	KCode         = "编码"
+	KGenText      = "点击生成"
+	KGenTabText   = "生成编码"
+	KUserInfoText = "用户信息"
+	KSave         = "保存编码"
+	KRefresh      = "刷新"
 )

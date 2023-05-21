@@ -22,7 +22,7 @@ var tables = map[int]*widget.Table{}
 func messageListener() {
 	for {
 		select {
-		case message, ok := <-net.Client.Receive:
+		case message, ok := <-net.Client.Receive():
 			if !ok {
 				continue
 			}

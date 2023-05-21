@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"github.com/authentication_app/internal/controller"
 	"github.com/authentication_app/internal/domain/request"
 	"github.com/authentication_app/internal/net"
 	"github.com/authentication_app/internal/ui/constants"
@@ -21,6 +22,7 @@ func NewUserView() {
 		Width:  constants.KMainWindowWidth,
 		Height: constants.KMainWindowHeight,
 	})
+	// 用户信息展示
 	_ = net.UserInfo()
 	userTable := widget.NewTable(func() (int, int) {
 		return len(userData), len(userData[0])
@@ -32,7 +34,17 @@ func NewUserView() {
 			o.(*widget.Label).SetText(userData[i.Row][i.Col])
 		})
 	tables[constants.KUserInfoTable] = userTable
-	user := container.NewTabItem("用户信息", userTable)
+	refreshButton := widget.NewButton(constants.KRefresh, func() {
+		err := net.UserInfo()
+		if err != nil {
+			dialog.ShowError(err, w)
+		}
+	})
+	bottomBox := container.NewVBox(refreshButton)
+	userHSplit :=
+		container.NewVSplit(userTable, bottomBox)
+	user := container.NewTabItem(constants.KUserInfoText, userHSplit)
+
 	codeTable := widget.NewTable(func() (int, int) {
 		return len(codeData), 1
 	},
@@ -59,12 +71,16 @@ func NewUserView() {
 			dialog.ShowError(err, w)
 		}
 	}
-	form.SubmitText = "点击生成"
+	form.SubmitText = constants.KGenText
+	saveButton := widget.NewButton(constants.KSave, func() {
+		controller.SaveFile(codeData)
+	})
+	hBox := container.NewVBox(form, saveButton)
 	box := container.NewHSplit(
-		form,
+		hBox,
 		codeTable,
 	)
-	code := container.NewTabItem("生成编码", box)
+	code := container.NewTabItem(constants.KGenTabText, box)
 	tables[constants.KCodeTable] = codeTable
 
 	appTabs := container.NewAppTabs(user, code)

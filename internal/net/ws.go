@@ -22,7 +22,7 @@ const (
 type WsClient struct {
 	Address           string
 	c                 *websocket.Conn
-	Receive           chan []byte
+	receive           chan []byte
 	stopReconnectChan chan struct{}
 	isConnect         atomic.Bool
 	mac               string
@@ -30,7 +30,7 @@ type WsClient struct {
 
 func NewWsClient() *WsClient {
 	resp := &WsClient{}
-	resp.Receive = make(chan []byte, 1024)
+	resp.receive = make(chan []byte, 1024)
 	resp.stopReconnectChan = make(chan struct{})
 	resp.isConnect = atomic.Bool{}
 	resp.mac = utils.GetMac()
@@ -54,7 +54,7 @@ func (w *WsClient) readMessage() {
 				return
 			}
 			logrus.Infof("收到服务器发送消息: %s", resp)
-			w.Receive <- resp
+			w.receive <- resp
 		}
 	}()
 
@@ -62,7 +62,7 @@ func (w *WsClient) readMessage() {
 func (w *WsClient) Close() {
 	_ = w.c.Close()
 	w.isConnect.Swap(false)
-	close(w.Receive)
+	close(w.receive)
 	close(w.stopReconnectChan)
 }
 
@@ -79,8 +79,8 @@ func (w *WsClient) Heartbeat() {
 	_ = w.SendMessage(msg)
 }
 func (w *WsClient) connect() {
-	logrus.Info("开始连接服务器")
 	if !w.isConnect.Load() {
+		logrus.Info("连接服务器开始")
 		address := fmt.Sprintf("%s:%d", global.Cfg.ServerCfg.Host, global.Cfg.ServerCfg.Port)
 		u := url.URL{Scheme: "ws", Host: address, Path: "/authentication_hub/connect"}
 		c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -116,4 +116,7 @@ func (w *WsClient) SendMessage(message []byte) (err error) {
 		return
 	}
 	return
+}
+func (w *WsClient) Receive() chan []byte {
+	return w.receive
 }
